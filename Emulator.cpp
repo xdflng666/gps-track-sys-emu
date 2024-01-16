@@ -8,8 +8,9 @@
 #include <fstream>
 
 #pragma comment(lib, "rpcrt4.lib")
-#include "Utils.hpp"
+#pragma comment(lib, "ws2_32.lib")
 #include "Device.hpp"
+#include "Utils.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -104,6 +105,8 @@ int main(int argc, char* argv[])
 			std::string deviceTopic = "    ==Device " + std::to_string(i + 1) + "==    \n";
 			printColoredText(deviceTopic.data(), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 			deviceVector[i].printDevice(i + 1);
+
+			deviceVector[i].send();
 		}
 		std::cout << "  ~~~~~~~~~~~~~~~~~~~~~~  " << std::endl << std::endl;
 		Sleep(5000);

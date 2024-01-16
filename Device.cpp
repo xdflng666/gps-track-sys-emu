@@ -3,6 +3,10 @@
 #include <iostream>
 #include <iomanip>
 
+#include "Utils.hpp"
+
+#define SHOW_RESPONSE
+
 Device::Device(UUID id, Coord coord) :
 	id(id),
 	coord(coord)
@@ -13,20 +17,14 @@ Device::Device(const Device& device) :
 	coord(device.coord)
 { }
 
-UUID& Device::getId()
+std::string Device::getIdString()
 {
-	return this->id;
-}
-
-Coord Device::getCoord()
-{
-	return this->coord;
-}
-
-void Device::setCoord(Coord newCoord)
-{
-	this->coord.lon_ = newCoord.lon_;
-	this->coord.lat_ = newCoord.lon_;
+	std::string temp;
+	RPC_CSTR rpcUuid = NULL;
+	(void)UuidToStringA(&id, &rpcUuid);
+	temp = (char*)rpcUuid;
+	
+	return temp;
 }
 
 void Device::move()
@@ -73,6 +71,36 @@ void Device::move()
 	if (coord.lat_ < MIN_LON || coord.lon_ > MAX_LON)
 	{
 		coord.lon_ = lastCoord.lon_;
+	}
+}
+
+void Device::send()
+{
+	try
+	{
+		http::Request request{ "http://gps.ru/addCoords" };
+
+		const std::string body = "{\"device_id\": \"" + getIdString() + "\", \"coordinates\": {\"latitude\": " +
+								 std::to_string(coord.lat_) + ", \"longitude\": " + std::to_string(coord.lon_) + "}}";
+
+#ifdef SHOW_REQUEST
+		printColoredText("   Request:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		std::cout << std::endl << body << std::endl << std::endl;
+#endif
+
+		const auto response = request.send("POST", body, {
+			{"Content-Type", "application/json"}
+		});
+
+#ifdef SHOW_RESPONSE
+		printColoredText("   Response:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		std::cout << std::endl << std::string{response.body.begin(), response.body.end()} << std::endl;
+#endif
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Request failed, error: " << e.what() << '\n';
+		return;
 	}
 }
 

@@ -1,7 +1,8 @@
 #ifndef EMULATOR_HPP
 #define EMULATOR_HPP
 
-#include <windows.h>
+#include "HTTPRequest.hpp"
+#include <rpc.h>
 
 const double MIN_LAT = 59.7006;
 const double MAX_LAT = 60.1269;
@@ -37,11 +38,9 @@ public:
 
 	~Device() = default;
 
-	UUID&  getId();
-	Coord getCoord();
-	void  setCoord(Coord newCoord);
-
+	std::string getIdString();
 	void move();
+	void send();
 
 	void printDevice(int number);
 
