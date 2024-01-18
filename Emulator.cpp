@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 			deviceVector[i].printDevice(i + 1);
 		}
 		std::cout << "  ~~~~~~~~~~~~~~~~~~~~~~  " << std::endl << std::endl;
-		Sleep(5000);
+		Sleep(60 * 1000);
 	}
 
 	return 0;
