@@ -46,6 +46,8 @@ public:
 
 private:
 
+	const double DEVISE_STEP = 0.0001;
+
 	UUID  id;
 	Coord coord;
 };

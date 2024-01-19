@@ -1,5 +1,5 @@
 #ifndef UTILS_HPP
-#define UINLS_HPP
+#define UTILS_HPP
 
 #include "Device.hpp"
 

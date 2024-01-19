@@ -24,7 +24,7 @@ std::string Device::getIdString()
 	RPC_CSTR rpcUuid = NULL;
 	(void)UuidToStringA(&id, &rpcUuid);
 	temp = (char*)rpcUuid;
-
+	
 	return temp;
 }
 
@@ -36,32 +36,32 @@ void Device::move()
 	switch (direction)
 	{
 	case NORTH:
-		coord.lat_ += 0.000001;
+		coord.lat_ += DEVISE_STEP;
 		break;
 	case NORTHEAST:
-		coord.lat_ += 0.000001;
-		coord.lon_ += 0.000001;
+		coord.lat_ += DEVISE_STEP;
+		coord.lon_ += DEVISE_STEP;
 		break;
 	case EAST:
-		coord.lon_ += 0.000001;
+		coord.lon_ += DEVISE_STEP;
 		break;
 	case SOUTHEAST:
-		coord.lat_ -= 0.000001;
-		coord.lon_ += 0.000001;
+		coord.lat_ -= DEVISE_STEP;
+		coord.lon_ += DEVISE_STEP;
 		break;
 	case SOUTH:
-		coord.lat_ -= 0.000001;
+		coord.lat_ -= DEVISE_STEP;
 		break;
 	case SOUTHWEST:
-		coord.lat_ -= 0.000001;
-		coord.lon_ -= 0.000001;
+		coord.lat_ -= DEVISE_STEP;
+		coord.lon_ -= DEVISE_STEP;
 		break;
 	case WEST:
-		coord.lon_ -= 0.000001;
+		coord.lon_ -= DEVISE_STEP;
 		break;
 	case NORTHWEST:
-		coord.lat_ += 0.000001;
-		coord.lon_ -= 0.000001;
+		coord.lat_ += DEVISE_STEP;
+		coord.lon_ -= DEVISE_STEP;
 		break;
 	}
 
@@ -82,7 +82,7 @@ void Device::send()
 		http::Request request{ "http://localhost:8088/add/coordinate" };
 
 		const std::string body = "{\"device_id\": \"" + getIdString() + "\", \"coordinates\": {\"latitude\": " +
-			std::to_string(coord.lat_) + ", \"longitude\": " + std::to_string(coord.lon_) + "}}";
+								 std::to_string(coord.lat_) + ", \"longitude\": " + std::to_string(coord.lon_) + "}}";
 
 #ifdef SHOW_REQUEST
 		printColoredText("   Request:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
@@ -91,11 +91,11 @@ void Device::send()
 
 		const auto response = request.send("POST", body, {
 			{"Content-Type", "application/json"}
-			});
+		});
 
 #ifdef SHOW_RESPONSE
 		printColoredText("   Response:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		std::cout << std::endl << std::string{ response.body.begin(), response.body.end() } << std::endl;
+		std::cout << std::endl << std::string{response.body.begin(), response.body.end()} << std::endl;
 #endif
 	}
 	catch (const std::exception& e)
@@ -115,8 +115,8 @@ void Device::printDevice(int number)
 	uuid = (char*)rpcUuid;
 
 	std::cout << "  UUID:  " << uuid << std::endl
-		<< "  Coord: LAT: " << std::fixed << std::setprecision(6) << coord.lat_ << std::endl
-		<< "         LON: " << coord.lon_ << std::endl << std::endl;
+			  << "  Coord: LAT: " << std::fixed << std::setprecision(6)<< coord.lat_ << std::endl
+			  << "         LON: " << coord.lon_ << std::endl << std::endl;
 
 	RpcStringFreeA(&rpcUuid);
 }
