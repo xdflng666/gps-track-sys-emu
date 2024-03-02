@@ -1,25 +1,26 @@
-#include "Device.hpp"
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 
+#include "Device.hpp"
 #include "Utils.hpp"
 
-#define SHOW_REQUEST
-#define SHOW_RESPONSE
+// #define SHOW_REQUEST
+// #define SHOW_RESPONSE
 
-Device::Device(UUID id, Coord coord) :
-	id(id)
+Device::Device(uuid_t& uuid, Coord coord)
 {
+	std::copy(uuid, uuid + 16, this->uuid);
+
 	this->coord.lat_ = coord.lat_;
 	this->coord.lon_ = coord.lon_;
 }
 
 Device::Device(const Device& device) :
-	id(device.id),
 	coord(device.coord)
-{ }
+{
+	uuid_copy(uuid, device.uuid);
+}
 
 void  Device::setCoord(Coord newCoord)
 {
@@ -31,19 +32,16 @@ Coord Device::getCoord()
 	return coord;
 }
 
-UUID  Device::getId()
+uuid_t& Device::getId()
 {
-	return id;
+	return uuid;
 }
 
 std::string Device::getIdString()
 {
-	std::string temp;
-	RPC_CSTR rpcUuid = NULL;
-	(void)UuidToStringA(&id, &rpcUuid);
-	temp = (char*)rpcUuid;
-
-	RpcStringFreeA(&rpcUuid);
+	char str[100];
+	uuid_unparse(uuid, str);
+	std::string temp{ str };
 	
 	return temp;
 }
@@ -109,17 +107,15 @@ RetCodes Device::send(std::string url)
 								 std::to_string(coord.lat_) + ", \"longitude\": " + std::to_string(coord.lon_) + "}}";
 
 #ifdef SHOW_REQUEST
-		printColoredText("   Request:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		std::cout << std::endl << body << std::endl << std::endl;
+		std::cout << "\033[1;31mRequest\033[0m" << std::endl << body << std::endl << std::endl;
 #endif
 
 		const auto response = request.send("POST", body, {
 			{"Content-Type", "application/json"}
-		});
+		}, std::chrono::milliseconds{5000});
 
 #ifdef SHOW_RESPONSE
-		printColoredText("   Response:", FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
-		std::cout << std::endl << std::string{response.body.begin(), response.body.end()} << std::endl;
+		std::cout << "\033[1;31mResponse\033[0m"  << std::endl << std::string{response.body.begin(), response.body.end()} << std::endl;
 #endif
 
 		return RetCodes::SUCCESS;
@@ -145,24 +141,22 @@ void DeviceVector::initDevices(std::string fileName)
 	std::ifstream fileIn(fileName);
 	for (int i = 0; i < deviceCount; i++)
 	{
-		UUID uuid;
+		uuid_t uuid;
 		std::string fileUuid;
 		std::getline(fileIn, fileUuid);
 		if (fileIn.fail())
 		{
-			(void)UuidCreate(&uuid);
-
-			std::string temp;
-			RPC_CSTR rpcUuid = NULL;
-			(void)UuidToStringA(&uuid, &rpcUuid);
-			temp = (char*)rpcUuid;
+			uuid_generate(uuid);
+			char str[100];
+			uuid_unparse(uuid, str);
+			std::string temp{ str };
 
 			newDevicesUuid.append(temp);
 			newDevicesUuid.append("\n");
 		}
 		else
 		{
-			(void)UuidFromStringA((RPC_CSTR)fileUuid.data(), &uuid);
+			std::copy(fileUuid.begin(), fileUuid.end(), uuid);
 		}
 
 		Coord coord		 = randomCoordInSpb();
@@ -170,8 +164,7 @@ void DeviceVector::initDevices(std::string fileName)
 
 		devices.push_back(newDevcie);
 
-		std::string deviceTopic = "    ==Device " + std::to_string(i+1) + "==    \n";
-		printColoredText(deviceTopic.data(), FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		std::cout << "\033[1;34m    ==Device " << std::to_string(i+1) << "==    \033[0m\n";
 		devices[i].printDevice();
 	}
 	fileIn.close();
@@ -181,7 +174,7 @@ void DeviceVector::updateConfig(std::string fileName)
 {
 	if (!newDevicesUuid.empty())
 	{
-		std::ofstream fileOut("config.txt", std::ios_base::app);
+		std::ofstream fileOut(fileName, std::ios_base::app);
 		fileOut << newDevicesUuid;
 		fileOut.close();
 	}

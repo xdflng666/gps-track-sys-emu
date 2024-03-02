@@ -2,6 +2,7 @@
 #define EMULATOR_HPP
 
 #include "Utils.hpp"
+#include <uuid/uuid.h>
 
 class Device
 {
@@ -9,14 +10,14 @@ public:
 
 	Device() = delete;
 
-	Device(UUID id, Coord coord);
+	Device(uuid_t& uuid, Coord coord);
 	Device(const Device &device);
 
 	~Device() = default;
 
 	void  setCoord(Coord newCoord);
 	Coord getCoord();
-	UUID  getId();
+	uuid_t& getId();
 	std::string getIdString();
 
 	RetCodes move(Direction dir);
@@ -26,7 +27,7 @@ public:
 
 private:
 
-	UUID  id;
+	uuid_t uuid;
 	Coord coord;
 };
 

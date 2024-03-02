@@ -2,7 +2,6 @@
 #define UTILS_HPP
 
 #include "HTTPRequest.hpp"
-#include <rpc.h>
 
 const double MIN_LAT = 59.7006;
 const double MAX_LAT = 60.1269;
@@ -40,7 +39,6 @@ struct Coord
 	double lon_ = 0;
 };
 
-void  printColoredText(const char* text, int color);
 Coord randomCoordInSpb();
 
 RetCodes checkEnterParams(int argc, char* argv[], int& deviceCount, std::string& url);
