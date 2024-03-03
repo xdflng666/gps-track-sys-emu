@@ -3,14 +3,6 @@
 #include <iostream>
 #include <random>
 
-void printColoredText(const char* text, int color)
-{
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	SetConsoleTextAttribute(hConsole, color);
-	std::cout << text;
-	SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-}
-
 Coord randomCoordInSpb()
 {
 	Coord newCoord;
@@ -30,8 +22,7 @@ RetCodes checkEnterParams(int argc, char* argv[], int& deviceCount, std::string&
 {
 	if (argc != 3)
 	{
-		printColoredText("Invalid argument", FOREGROUND_RED | FOREGROUND_INTENSITY);
-		std::cout << ": specify the number of devices to emulate and POST URL";
+		std::cout << "\033[1;31mInvalid argument\033[0m" << ": specify the number of devices to emulate and POST URL\n";
 		return RetCodes::ERR_INVALID_PARAM;
 	}
 
@@ -39,8 +30,7 @@ RetCodes checkEnterParams(int argc, char* argv[], int& deviceCount, std::string&
 
 	if (tempDeviceCount <= 0)
 	{
-		printColoredText("Invalid argument", FOREGROUND_RED | FOREGROUND_INTENSITY);
-		std::cout << ": the number of devices must be positive";
+		std::cout << "\033[1;31mInvalid argument\033[0m" << ": the number of devices must be positive\n";
 		return RetCodes::ERR_NEGATIVE_VALUE;
 	}
 	deviceCount = tempDeviceCount;
@@ -48,8 +38,7 @@ RetCodes checkEnterParams(int argc, char* argv[], int& deviceCount, std::string&
 	std::string tempUrl = argv[2];
 	if (tempUrl.find("http://") == url.npos)
 	{
-		printColoredText("Invalid argument", FOREGROUND_RED | FOREGROUND_INTENSITY);
-		std::cout << ": POST URL must have format 'http://...'";
+		std::cout << "\033[1;31mInvalid argument\033[0m" << ": POST URL must have format 'http://...'\n";
 		return RetCodes::ERR_INVALID_URL;
 	}
 	url = tempUrl;

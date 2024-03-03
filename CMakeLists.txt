@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_CXX_FLAGS "-g -Wall -fprofile-arcs -ftest-coverage -lgcov")
+set(CMAKE_CXX_FLAGS "-O0 -g --coverage")
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 
 include_directories(
@@ -22,27 +22,31 @@ add_library(libraries STATIC
 )
 
 target_link_libraries(libraries
-    rpcrt4.lib
-    ws2_32.lib
+    uuid
 )
 
 add_executable(emulator src/Emulator.cpp)
-target_compile_options(emulator PUBLIC "--coverage")
 target_link_libraries(emulator
     libraries
-    gcov
 )
 
 add_executable(testDevice test/testDevice.cpp)
-#target_compile_options(testDevice PUBLIC "-O0" "-fprofile-arcs" "-ftest-coverage")
 target_link_libraries(testDevice
+    libraries
+)
+
+add_executable(testUtils test/testUtils.cpp)
+target_link_libraries(testUtils
     libraries
 )
 
 include(CTest)
 enable_testing()
 
-# TESTING
+
+# =================
+#    Test Device
+# =================
 
 add_test(NAME testDeviceConstruct COMMAND testDevice
     "testDeviceConstruct"
@@ -83,6 +87,38 @@ add_test(NAME testDeviceMoveErrlat COMMAND testDevice
 add_test(NAME testDeviceMoveErrlot COMMAND testDevice
     "testDeviceMoveErrlot"
 )
+add_test(NAME testDeviceSend COMMAND testDevice
+    "testDeviceSend"
+)
 add_test(NAME testDeviceSendError COMMAND testDevice
     "testDeviceSendError"
+)
+add_test(NAME testDeviceInitDevices COMMAND testDevice
+    "testDeviceInitDevices"
+)
+add_test(NAME testDeviceSeveralInit COMMAND testDevice
+    "testDeviceSeveralInit"
+)
+
+# =================
+#    Test Utils
+# =================
+
+add_test(NAME testUtilsCheckEnterParamsInvalidPeram COMMAND testUtils
+    "testUtilsCheckEnterParamsInvalidPeram"
+)
+add_test(NAME testUtilsCheckEnterParamsNegativeValue COMMAND testUtils
+    "testUtilsCheckEnterParamsNegativeValue"
+)
+add_test(NAME testUtilsCheckEnterParamsInvalidUrl COMMAND testUtils
+    "testUtilsCheckEnterParamsInvalidUrl"
+)
+add_test(NAME testUtilsCheckEnterParamsSuccess COMMAND testUtils
+    "testUtilsCheckEnterParamsSuccess"
+)
+add_test(NAME testUtilsCheckEnterParamsSuccessValue COMMAND testUtils
+    "testUtilsCheckEnterParamsSuccessValue"
+)
+add_test(NAME testUtilsRandomCoordInSpb COMMAND testUtils
+    "testUtilsRandomCoordInSpb"
 )

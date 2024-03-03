@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <fstream>
 
 #include "Device.hpp"
 #include "Utils.hpp"
@@ -18,13 +19,17 @@ std::map<std::string, int> tests = { { "testDeviceConstruct",      1 },
                                      { "testDeviceMoveErrlat",    12 },
                                      { "testDeviceMoveErrlot",    13 },
                                      { "testDeviceSend",          14 },
-                                     { "testDeviceSendError",     15 } };
+                                     { "testDeviceSendError",     15 },
+                                     { "testDeviceInitDevices",   16 },
+                                     { "testDeviceSeveralInit",   17 } };
 
 void testDeviceConstruct();
 void testDeviceCopyConstruct();
 void testDeviceMove(int choice);
 void testDeviceSend();
 void testDeviceSendError();
+void testDeviceInitDevices(int deviceCount);
+void testDeviceSeveralInit();
 
 int main(int argc, char* argv[])
 {
@@ -32,8 +37,7 @@ int main(int argc, char* argv[])
 
     if (argc != 2)
     {
-        printColoredText("Invalid argument", FOREGROUND_RED | FOREGROUND_INTENSITY);
-		std::cout << ": specify the name of test";
+        std::cout << "\033[1;31m Invalid argument\033[0m" << ": specify the name of test";
 		return RetCodes::ERR_INVALID_PARAM;
     }
 
@@ -116,10 +120,19 @@ int main(int argc, char* argv[])
             testDeviceSendError();
             break;
         }
+        case 16:
+        {
+            testDeviceInitDevices(5);
+            break;
+        }
+        case 17:
+        {
+            testDeviceSeveralInit();
+            break;
+        }
         default:
         {
-            printColoredText("Invalid argument", FOREGROUND_RED | FOREGROUND_INTENSITY);
-            std::cout << ": unknown test name";
+            std::cout << "\033[1;31m Invalid argument\033[0m" << ": unknown test name";
 		    return RetCodes::ERR_INVALID_PARAM;
         }
     }
@@ -129,50 +142,49 @@ int main(int argc, char* argv[])
 
 void testDeviceConstruct()
 {
-    UUID uuid;
-    (void)UuidCreate(&uuid);
+    uuid_t uuid;
+    uuid_generate(uuid);
     Coord coord = randomCoordInSpb();
 
     Device device(uuid, coord);
 
-    assert(uuid == device.getId());
+    assert(uuid_compare(uuid, device.getId()) == 0);
     assert(coord.lat_ == device.getCoord().lat_);
     assert(coord.lon_ == device.getCoord().lon_);
 }
 
 void testDeviceCopyConstruct()
 {
-    UUID uuid;
-    (void)UuidCreate(&uuid);
+    uuid_t uuid;
+    uuid_generate(uuid);
     Coord coord = randomCoordInSpb();
 
     Device device1(uuid, coord);
 
     Device device2(device1);
 
-    assert(device1.getId() == device2.getId());
+    assert(uuid_compare(device1.getId(), device2.getId()) == 0);
     assert(device1.getCoord().lat_ == device2.getCoord().lat_);
     assert(device1.getCoord().lon_ == device2.getCoord().lon_);
 }
 
 void testDeviceMove(int choice)
 {
-    UUID uuid;
-    (void)UuidCreate(&uuid);
+    uuid_t uuid;
+    uuid_generate(uuid);
     Coord coord;
-
-    coord.lat_ = (MAX_LAT + MIN_LAT) / 2;
-    coord.lon_ = (MAX_LON + MIN_LON) / 2;
 
     switch (choice)
     {
     case 0:
     case 4:
     {
+        coord.lat_ = (MAX_LAT + MIN_LAT) / 2;
+        coord.lon_ = (MAX_LON + MIN_LON) / 2;
         Device device(uuid, coord);
         device.move(static_cast<Direction>(choice));
-        assert(abs(coord.lat_ - device.getCoord().lat_) > DEVICE_STEP ||
-               abs(coord.lon_ - device.getCoord().lon_) < DEVICE_STEP);
+        assert(abs(coord.lat_ - device.getCoord().lat_) > 0.00001 ||
+               abs(coord.lon_ - device.getCoord().lon_) < 0.00001);
         break;
     }
     case 1:
@@ -180,19 +192,27 @@ void testDeviceMove(int choice)
     case 5:
     case 7:
     {
+        coord.lat_ = (MAX_LAT + MIN_LAT) / 2;
+        coord.lon_ = (MAX_LON + MIN_LON) / 2;
         Device device(uuid, coord);
+        std::cout << "coord.lat_ = " << device.getCoord().lat_ << std::endl;
+        std::cout << "coord.lon_ = " << device.getCoord().lon_ << std::endl;
         device.move(static_cast<Direction>(choice));
-        assert(abs(coord.lat_ - device.getCoord().lat_) > DEVICE_STEP ||
-               abs(coord.lon_ - device.getCoord().lon_) > DEVICE_STEP);
+        std::cout << "coord.lat_ = " << device.getCoord().lat_ << std::endl;
+        std::cout << "coord.lon_ = " << device.getCoord().lon_ << std::endl;
+        assert(abs(coord.lat_ - device.getCoord().lat_) < 0.00001 ||
+               abs(coord.lon_ - device.getCoord().lon_) < 0.00001);
         break;
     }
     case 2:
     case 6:
     {
+        coord.lat_ = (MAX_LAT + MIN_LAT) / 2;
+        coord.lon_ = (MAX_LON + MIN_LON) / 2;
         Device device(uuid, coord);
         device.move(static_cast<Direction>(choice));
-        assert(abs(coord.lat_ - device.getCoord().lat_) < DEVICE_STEP ||
-               abs(coord.lon_ - device.getCoord().lon_) > DEVICE_STEP);
+        assert(abs(coord.lat_ - device.getCoord().lat_) < 0.00001 ||
+               abs(coord.lon_ - device.getCoord().lon_) > 0.00001);
         break;
     }
     case 8:
@@ -211,7 +231,7 @@ void testDeviceMove(int choice)
         Device device(uuid, coord);
 
         device.move(Direction::NORTH);
-        assert(abs(coord.lat_ - device.getCoord().lat_) <= DEVICE_STEP);
+        assert(abs(coord.lat_ - device.getCoord().lat_) <= 0.00001);
     }
     case 10:
     {
@@ -220,7 +240,7 @@ void testDeviceMove(int choice)
         Device device(uuid, coord);
 
         device.move(Direction::EAST);
-        assert(abs(coord.lon_ - device.getCoord().lon_) <= DEVICE_STEP);
+        assert(abs(coord.lon_ - device.getCoord().lon_) <= 0.00001);
     }
     default:
         break;
@@ -229,24 +249,80 @@ void testDeviceMove(int choice)
 
 void testDeviceSend()
 {
-    UUID uuid;
-    (void)UuidCreate(&uuid);
+    uuid_t uuid;
+    uuid_generate(uuid);
     Coord coord = randomCoordInSpb();
 
     Device device(uuid, coord);
 
-    RetCodes rc = device.send("http://localhost:8088/add/coordinate");
+    RetCodes rc = device.send("http://google.com");
     assert(rc == RetCodes::SUCCESS);
 }
 
 void testDeviceSendError()
 {
-    UUID uuid;
-    (void)UuidCreate(&uuid);
+    uuid_t uuid;
+    uuid_generate(uuid);
     Coord coord = randomCoordInSpb();
 
     Device device(uuid, coord);
 
     RetCodes rc = device.send("http://asdasd");
     assert(rc == RetCodes::ERR_URL_CONECTION);
+}
+
+void testDeviceInitDevices(int deviceCount)
+{
+    DeviceVector deviceVector;
+	deviceVector.deviceCount = deviceCount;
+
+    deviceVector.initDevices("test.txt");
+    deviceVector.updateConfig("test.txt");
+
+    std::ifstream file("test.txt");
+    int counter = 0;
+
+    while (!file.eof())
+    {
+        ++counter;
+        char str[1024];
+        file.getline(str, 1024, '\n');
+    }
+    file.close();
+    remove("test.txt");
+
+    std::cout << counter << std::endl;
+
+    assert(counter-1 == deviceCount);
+}
+
+void testDeviceSeveralInit()
+{
+    DeviceVector deviceVector;
+	deviceVector.deviceCount = 5;
+
+    deviceVector.initDevices("test.txt");
+    deviceVector.updateConfig("test.txt");
+
+    DeviceVector deviceVector2;
+    deviceVector2.deviceCount = 3;
+
+    deviceVector2.initDevices("test.txt");
+    deviceVector2.updateConfig("test.txt");
+
+    std::ifstream file("test.txt");
+    int counter = 0;
+
+    while (!file.eof())
+    {
+        ++counter;
+        char str[1024];
+        file.getline(str, 1024, '\n');
+    }
+    file.close();
+    remove("test.txt");
+
+    std::cout << counter << std::endl;
+
+    assert(counter-1 == 5);
 }
