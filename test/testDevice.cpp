@@ -20,8 +20,10 @@ std::map<std::string, int> tests = { { "testDeviceConstruct",      1 },
                                      { "testDeviceMoveErrlot",    13 },
                                      { "testDeviceSend",          14 },
                                      { "testDeviceSendError",     15 },
-                                     { "testDeviceInitDevices",   16 },
-                                     { "testDeviceSeveralInit",   17 } };
+                                     { "testDeviceInitDevices",   16 },  
+                                     { "testDeviceSeveralInit",   17 },
+                                     { "testDeviceSetCoord",      18 },
+                                     { "testDeviceGetIdString",   19 }};
 
 void testDeviceConstruct();
 void testDeviceCopyConstruct();
@@ -30,6 +32,8 @@ void testDeviceSend();
 void testDeviceSendError();
 void testDeviceInitDevices(int deviceCount);
 void testDeviceSeveralInit();
+void testDeviceSetCoord();
+void testDeviceGetIdString();
 
 int main(int argc, char* argv[])
 {
@@ -128,6 +132,16 @@ int main(int argc, char* argv[])
         case 17:
         {
             testDeviceSeveralInit();
+            break;
+        }
+        case 18:
+        {
+            testDeviceSetCoord();
+            break;
+        }
+        case 19:
+        {
+            testDeviceGetIdString();
             break;
         }
         default:
@@ -325,4 +339,32 @@ void testDeviceSeveralInit()
     std::cout << counter << std::endl;
 
     assert(counter-1 == 5);
+}
+
+void testDeviceSetCoord()
+{
+    uuid_t uuid;
+    uuid_generate(uuid);
+    Coord coord1 = randomCoordInSpb();
+    Coord coord2 = randomCoordInSpb();
+
+    Device device(uuid, coord1);
+    device.setCoord(coord2);
+
+    assert(abs(device.getCoord().lat_ - coord2.lat_) < 0.00001 &&
+           abs(device.getCoord().lon_ - coord2.lon_) < 0.00001);
+}
+
+void testDeviceGetIdString()
+{
+    uuid_t uuid;
+    uuid_generate(uuid);
+    Coord coord = randomCoordInSpb();
+    Device device(uuid, coord);
+
+    std::string uuidString = device.getIdString();
+    uuid_t uuid2;
+    uuid_parse(uuidString.c_str(), uuid2);
+
+    assert(uuid_compare(uuid, uuid2) == 0);
 }

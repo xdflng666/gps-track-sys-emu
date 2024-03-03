@@ -54,6 +54,12 @@ add_test(NAME testDeviceConstruct COMMAND testDevice
 add_test(NAME testDeviceCopyConstruct COMMAND testDevice
     "testDeviceCopyConstruct"
 )
+add_test(NAME testDeviceSetCoord COMMAND testDevice
+    "testDeviceSetCoord"
+)
+add_test(NAME testDeviceGetIdString COMMAND testDevice
+    "testDeviceGetIdString"
+)
 add_test(NAME testDeviceMoveNorth COMMAND testDevice
     "testDeviceMoveNorth"
 )
